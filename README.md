@@ -1,42 +1,80 @@
-# LinkedIn KPI Dashboard (FastHTML Version)
+# Company Scraper Dashboard
 
-This dashboard visualizes the Key Performance Indicators (KPIs) for the LinkedIn Scraper, specifically for Client ID 11.
-It is built using **FastHTML** and **Plotly**.
+A multi-platform analytics dashboard for monitoring web scraping operations across various platforms.
 
-## Prerequisites
+## Features
 
-You need to have Python installed. The following packages are required:
+- 🔐 Secure authentication system
+- 📊 Real-time KPI monitoring
+- 🏥 System health dashboard
+- 💼 LinkedIn analytics (active)
+- 🚀 Multi-platform support (coming soon)
+- 📈 Time-based filtering (Daily, Weekly, Monthly, Quarterly, Yearly)
+- 📉 Interactive charts and visualizations
+- 🔍 Infrastructure monitoring
 
-- python-fasthtml
-- pandas
-- psycopg2-binary
-- plotly
-- uvicorn
+## Project Structure
+
+```
+linkedin_kpi/
+├── main.py                     # Application entry point
+├── config.py                   # Configuration settings
+├── auth.py                     # Authentication utilities
+├── db/
+│   ├── __init__.py
+│   ├── connection.py          # Database connection
+│   └── queries.py             # Database queries
+├── routes/
+│   ├── __init__.py
+│   ├── auth_routes.py         # Login/logout routes
+│   ├── platform_routes.py     # Platform selection
+│   ├── linkedin_routes.py     # LinkedIn dashboard
+│   └── system_routes.py       # System health monitoring
+├── components/
+│   ├── __init__.py
+│   ├── charts.py              # Chart generation
+│   └── styles.py              # CSS styles
+├── utils/
+│   └── __init__.py
+├── db_access.py               # Database credentials
+└── main_old.py                # Original monolithic version (backup)
+```
 
 ## Installation
 
-You can install the required packages using pip:
-
+1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install fasthtml pandas psycopg2 plotly numpy
 ```
 
-## Running the Dashboard
+2. Ensure database credentials are configured in `db_access.py`
 
-To run the dashboard, execute the following command in your terminal:
-
+3. Run the application:
 ```bash
 python main.py
 ```
 
-Or simply double-click `run_dashboard.bat`.
+## Usage
 
-The dashboard will be available at `http://localhost:5001` (or the port displayed in the terminal).
+1. **Login**
+   - Navigate to http://localhost:5001
+   - Email: patrickh217@gmail.com
+   - Password: Tada1234!!
 
-## Features
+2. **Platform Selection**
+   - Choose from available platforms
+   - Currently active: LinkedIn, System Health
 
-- **Client Overview**: Displays total companies tracked, successful scrapes, and success rate.
-- **Status Distribution**: A pie chart showing the distribution of scrape statuses.
-- **Scraper Status Breakdown**: A bar chart showing the status of the scraper.
-- **Timeline**: A line chart showing scraping activity over time.
-- **Detailed Data**: A table view of the latest entries.
+3. **LinkedIn Dashboard**
+   - View KPIs and metrics
+   - Filter by time period
+   - Monitor infrastructure status
+
+4. **System Health**
+   - Overall system status
+   - Database metrics
+   - Infrastructure monitoring
+
+## Version
+
+Current version: **v2**
