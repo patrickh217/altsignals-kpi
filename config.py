@@ -12,9 +12,9 @@ DEFAULT_USER_ID = 11
 HEALTH_CHECK_USER_ID = 2
 
 # Infrastructure Metrics (static for now)
-ACTIVE_ACCOUNTS = 37
+ACTIVE_ACCOUNTS = 10
 ACCOUNTS_ON_HOLD = 55
-ACTIVE_WORKERS = 10
+ACTIVE_WORKERS = 6
 
 # Processing Time Limits (in hours)
 MAX_PROCESSING_TIME = 6  # Scrapers work during business hours only
