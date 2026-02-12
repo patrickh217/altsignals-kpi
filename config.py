@@ -39,5 +39,8 @@ PLATFORMS = [
     ("producthunt", "Product Hunt", "🎯", False),
 ]
 
-# Version
-APP_VERSION = "v2"
+# Version (User 11 uses v2, mock users 12-56 use v3)
+APP_VERSION = "v2"  # Default for real data (User 11)
+
+# Demo Mode (generates mock data for private pool users 6-10 & 12-56)
+USE_DEMO_DATA_FOR_PRIVATE_POOL = True  # Set to False to use real PostgreSQL data
