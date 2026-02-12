@@ -327,53 +327,202 @@ APP_STYLES = """
         padding: 20px;
         font-family: sans-serif;
     }
-    .btn-download-pdf {
-        display: inline-block;
-        padding: 12px 24px;
-        background: #28a745;
-        color: white;
-        text-decoration: none;
-        border: none;
-        border-radius: 5px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-        margin-right: 10px;
-        font-size: 14px;
-    }
-    .btn-download-pdf:hover {
-        background: #218838;
-    }
-    .button-group {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
     @media print {
-        .logout-btn, .filter-buttons, .button-group, .user-selector-wrapper {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        html, body {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-size: 10pt;
+            line-height: 1.3;
+        }
+
+        body > div {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0.3in 0.4in;
+        }
+
+        .logout-btn, .filter-buttons, .user-selector-wrapper {
             display: none !important;
         }
-        .metric-card {
-            page-break-inside: avoid;
-            margin: 10px 5px;
+
+        h1 {
+            font-size: 18pt;
+            margin: 5px 0 3px 0;
+            padding: 0;
+            page-break-after: avoid;
         }
+
+        h2, h3 {
+            font-size: 11pt;
+            margin: 8px 0 4px 0;
+            padding: 0;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin: 2px 0;
+            padding: 0;
+        }
+
+        .header-info {
+            margin: 2px 0 10px 0;
+            padding: 0;
+            page-break-after: avoid;
+        }
+
+        .version-badge {
+            display: none;
+        }
+
+        /* Metrics layout */
+        .grid-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 0 0 8px 0;
+            page-break-inside: avoid;
+            width: 100%;
+        }
+
+        .metric-card {
+            flex: 1;
+            min-width: 22%;
+            page-break-inside: avoid;
+            margin: 0;
+            padding: 6px;
+            border: 1px solid #999;
+            background: white !important;
+            box-sizing: border-box;
+        }
+
+        .metric-value {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .metric-label {
+            font-size: 7pt;
+            color: #333;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .col-half {
+            flex: 1;
+            min-width: 48%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Chart containers */
         .chart-container {
             page-break-inside: avoid;
-            margin: 15px 0;
-            padding: 10px;
+            margin: 6px 0;
+            padding: 4px;
+            border: 1px solid #ccc;
+            background: white;
+            width: 100%;
+            max-height: 300px;
         }
-        table {
+
+        .chart-container h3 {
+            margin: 0 0 4px 0;
+            font-size: 10pt;
+        }
+
+        .chart-container svg,
+        .chart-container canvas {
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: 260px;
+        }
+
+        .chart-container iframe {
+            width: 100% !important;
+            height: 260px !important;
+            border: none !important;
+        }
+
+        .plotly-graph-div {
+            max-width: 100% !important;
+            height: 260px !important;
             page-break-inside: avoid;
-            margin: 20px 0;
         }
-        th, td {
+
+        svg {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            page-break-inside: auto;
+            font-size: 8pt;
+            line-height: 1.2;
+        }
+
+        thead {
+            page-break-after: avoid;
+        }
+
+        th {
+            background: #e8e8e8 !important;
             border: 1px solid #999;
-            padding: 8px;
+            padding: 4px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 8pt;
         }
-        body, div { background: white !important; }
-        .grid-row { margin: 0; }
-        .col-half { padding: 0 5px; }
-        h1, h2, h3 { page-break-after: avoid; }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 3px 4px;
+            word-wrap: break-word;
+            max-width: 80px;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9 !important;
+        }
+
+        /* Health check section */
+        .health-check-section {
+            background: white !important;
+            border-left: 2px solid #17a2b8;
+            page-break-inside: avoid;
+            padding: 4px;
+            margin: 6px 0;
+        }
+
+        .health-check-title {
+            margin: 0 0 2px 0;
+            font-size: 10pt;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        @page {
+            margin: 0.3in;
+            size: 11in 8.5in landscape;
+        }
     }
 """

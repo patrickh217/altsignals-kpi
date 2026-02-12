@@ -18,9 +18,6 @@ from config import (
     DEFAULT_USER_ID, ACTIVE_ACCOUNTS, ACCOUNTS_ON_HOLD, ACTIVE_WORKERS,
     MAX_PROCESSING_TIME, LATEST_ENTRIES_LIMIT, APP_VERSION, USE_DEMO_DATA_FOR_PRIVATE_POOL
 )
-from weasyprint import HTML, CSS
-from io import BytesIO
-from fastapi import Response
 
 
 def setup_linkedin_routes(rt):
@@ -201,14 +198,6 @@ def setup_linkedin_routes(rt):
                 ("quarterly", "Quarterly"),
                 ("yearly", "Yearly")
             ]
-
-            # Download PDF button
-            download_button = Div(
-                A("📥 Download PDF",
-                  href=f"/linkedin/dashboard/pdf?pool={pool}&period={period}&user_id={selected_user_id}",
-                  cls="btn-download-pdf"),
-                cls="button-group"
-            )
 
             filter_buttons = Div(
                 *[A(label,
@@ -411,7 +400,6 @@ def setup_linkedin_routes(rt):
                         user_selector,
                         cls="user-selector-wrapper"
                     ),
-                    download_button,
                     filter_buttons,
                     metrics_row_1,
                     metrics_row_2,
@@ -426,214 +414,3 @@ def setup_linkedin_routes(rt):
 
         except Exception as e:
             return Titled("KPI - Altsignals | Error", Div(f"An error occurred: {e}", style="color: red; padding: 20px;"))
-
-    @rt("/linkedin/dashboard/pdf")
-    def linkedin_dashboard_pdf(period: str = "overall", pool: str = "private", user_id: int = 11, sess: dict = None):
-        """Generate PDF export of LinkedIn KPI Dashboard"""
-        redirect = require_auth(sess)
-        if redirect:
-            return redirect
-
-        try:
-            selected_user_id = user_id if pool == "private" else DEFAULT_USER_ID
-            use_mock_data = (pool == "private" and USE_DEMO_DATA_FOR_PRIVATE_POOL and selected_user_id != 11)
-            app_version = "v2" if selected_user_id == 11 else "v3"
-
-            if use_mock_data:
-                mock_stats = generate_mock_stats(selected_user_id, period)
-                total_companies = mock_stats['total_companies']
-                successful_scrapes = mock_stats['successful_scrapes']
-                success_rate = mock_stats['success_rate']
-                emergency_count = mock_stats['emergency_count']
-                avg_processing_time = mock_stats['avg_processing_time']
-                active_accounts = mock_stats['active_accounts']
-                accounts_on_hold = mock_stats['accounts_on_hold']
-                active_workers = mock_stats['active_workers']
-
-                df_status = generate_mock_status_distribution(selected_user_id)
-                df_scraper = generate_mock_scraper_status(selected_user_id)
-                df_timeline = generate_mock_timeline(selected_user_id, period)
-                df_processing = generate_mock_processing_time(selected_user_id)
-                latest_df = generate_mock_dataframe(selected_user_id, num_records=20)
-            else:
-                df = fetch_user_data(selected_user_id)
-                if df.empty:
-                    return Response("No data found", status_code=404)
-
-                active_accounts = ACTIVE_ACCOUNTS
-                accounts_on_hold = ACCOUNTS_ON_HOLD
-                active_workers = ACTIVE_WORKERS
-
-                df['compute_datetime'] = pd.to_datetime(df['compute_datetime'])
-                df['last_update'] = pd.to_datetime(df['last_update'])
-
-                now = datetime.now()
-                df_filtered = df.copy()
-
-                if period == "daily":
-                    cutoff = now - timedelta(days=1)
-                    df_filtered = df_filtered[df_filtered['compute_datetime'] >= cutoff]
-                    period_label = "Last 24 Hours"
-                elif period == "weekly":
-                    cutoff = now - timedelta(weeks=1)
-                    df_filtered = df_filtered[df_filtered['compute_datetime'] >= cutoff]
-                    period_label = "Last Week"
-                elif period == "monthly":
-                    cutoff = now - timedelta(days=30)
-                    df_filtered = df_filtered[df_filtered['compute_datetime'] >= cutoff]
-                    period_label = "Last 30 Days"
-                elif period == "quarterly":
-                    cutoff = now - timedelta(days=90)
-                    df_filtered = df_filtered[df_filtered['compute_datetime'] >= cutoff]
-                    period_label = "Last Quarter"
-                elif period == "yearly":
-                    cutoff = now - timedelta(days=365)
-                    df_filtered = df_filtered[df_filtered['compute_datetime'] >= cutoff]
-                    period_label = "Last Year"
-                else:
-                    period_label = "All Time"
-
-                total_companies = len(df_filtered)
-                successful_scrapes = len(df_filtered[df_filtered['status'] == 'done'])
-                success_rate = (successful_scrapes / total_companies * 100) if total_companies > 0 else 0
-                emergency_count = len(df_filtered[df_filtered['emergency'] == True])
-
-                df_filtered['processing_time'] = (df_filtered['last_update'] - df_filtered['compute_datetime']).dt.total_seconds() / 3600
-                df_valid_time = df_filtered[(df_filtered['processing_time'] > 0) & (df_filtered['processing_time'] <= MAX_PROCESSING_TIME)]
-                avg_processing_time = df_valid_time['processing_time'].mean() if len(df_valid_time) > 0 else 0
-
-                df_status = df_filtered['status'].value_counts().reset_index()
-                df_status.columns = ['Status', 'Count']
-
-                df_scraper = df_filtered['scraper_status'].value_counts().reset_index()
-                df_scraper.columns = ['Scraper Status', 'Count']
-
-                df_filtered['date'] = df_filtered['compute_datetime'].dt.date
-                df_timeline = df_filtered.groupby('date').size().reset_index(name='Count')
-
-                df_processing = df_valid_time[['processing_time']].copy() if len(df_valid_time) > 0 else pd.DataFrame()
-
-                latest_df = df_filtered.sort_values(by='compute_datetime', ascending=False).head(LATEST_ENTRIES_LIMIT)
-                columns_to_drop = ['date', 'processing_time', 'ticker_eod', 'recycled_datetime_task', 'user_id', 'id']
-                latest_df = latest_df.drop(columns=[col for col in columns_to_drop if col in latest_df.columns])
-
-            if use_mock_data:
-                if period == "daily":
-                    period_label = "Last 24 Hours"
-                elif period == "weekly":
-                    period_label = "Last Week"
-                elif period == "monthly":
-                    period_label = "Last 30 Days"
-                elif period == "quarterly":
-                    period_label = "Last Quarter"
-                elif period == "yearly":
-                    period_label = "Last Year"
-                else:
-                    period_label = "All Time"
-
-            pool_name = "Private Pool" if pool == "private" else "Shared Pool"
-
-            # Generate HTML content for PDF
-            html_content = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>LinkedIn KPI Dashboard - {pool_name}</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; margin: 20px; color: #333; }}
-                    h1 {{ color: #0077b5; border-bottom: 3px solid #0077b5; padding-bottom: 10px; }}
-                    h2 {{ color: #495057; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }}
-                    .header {{ margin-bottom: 30px; }}
-                    .metrics {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }}
-                    .metric-card {{ background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #0077b5; }}
-                    .metric-label {{ color: #6c757d; font-size: 0.9em; text-transform: uppercase; font-weight: bold; }}
-                    .metric-value {{ font-size: 1.8em; font-weight: bold; color: #0077b5; margin-top: 5px; }}
-                    table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-                    th {{ background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; }}
-                    td {{ padding: 10px; border: 1px solid #ddd; }}
-                    tr:nth-child(even) {{ background: #f9f9f9; }}
-                    .footer {{ margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 0.9em; color: #666; }}
-                    .section {{ page-break-inside: avoid; margin-bottom: 30px; }}
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>📊 Company Scraper KPI Dashboard</h1>
-                    <p><strong>{pool_name}</strong> - Client Overview (User ID: {selected_user_id}) - {period_label}</p>
-                    <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                </div>
-
-                <div class="section">
-                    <h2>Key Metrics</h2>
-                    <div class="metrics">
-                        <div class="metric-card">
-                            <div class="metric-label">Total Companies</div>
-                            <div class="metric-value">{total_companies:,}</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Successfully Scraped</div>
-                            <div class="metric-value">{successful_scrapes:,}</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Success Rate</div>
-                            <div class="metric-value">{success_rate:.1f}%</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Emergency Tasks</div>
-                            <div class="metric-value">{emergency_count:,}</div>
-                        </div>
-                    </div>
-                    <div class="metrics">
-                        <div class="metric-card">
-                            <div class="metric-label">Avg Processing Time</div>
-                            <div class="metric-value">{avg_processing_time:.2f}h</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Active Accounts</div>
-                            <div class="metric-value">{active_accounts}</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Accounts On Hold</div>
-                            <div class="metric-value">{accounts_on_hold}</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Active Workers</div>
-                            <div class="metric-value">{active_workers}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h2>Latest Entries</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                {''.join(f'<th>{col}</th>' for col in latest_df.columns)}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {''.join('<tr>' + ''.join(f'<td>{str(val)[:50]}</td>' for val in row) + '</tr>' for _, row in latest_df.iterrows())}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="footer">
-                    <p>KPI Dashboard Report - {app_version}</p>
-                    <p>This report contains confidential information about scraping operations.</p>
-                </div>
-            </body>
-            </html>
-            """
-
-            # Convert HTML to PDF
-            pdf_bytes = HTML(string=html_content).write_pdf()
-
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename=linkedin_kpi_{pool}_{period}_{selected_user_id}.pdf"}
-            )
-
-        except Exception as e:
-            return Response(f"Error generating PDF: {str(e)}", status_code=500)
