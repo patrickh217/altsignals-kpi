@@ -327,4 +327,53 @@ APP_STYLES = """
         padding: 20px;
         font-family: sans-serif;
     }
+    .btn-download-pdf {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-right: 10px;
+        font-size: 14px;
+    }
+    .btn-download-pdf:hover {
+        background: #218838;
+    }
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    @media print {
+        .logout-btn, .filter-buttons, .button-group, .user-selector-wrapper {
+            display: none !important;
+        }
+        .metric-card {
+            page-break-inside: avoid;
+            margin: 10px 5px;
+        }
+        .chart-container {
+            page-break-inside: avoid;
+            margin: 15px 0;
+            padding: 10px;
+        }
+        table {
+            page-break-inside: avoid;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+        }
+        body, div { background: white !important; }
+        .grid-row { margin: 0; }
+        .col-half { padding: 0 5px; }
+        h1, h2, h3 { page-break-after: avoid; }
+    }
 """
