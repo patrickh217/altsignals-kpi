@@ -1,0 +1,5 @@
+python-fasthtml
+pandas
+psycopg2-binary
+plotly
+uvicorn
